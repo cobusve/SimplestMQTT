@@ -59,7 +59,8 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\FreeRTOS\Source\include;.\FreeRTOS-Plus-TCP\include;.\FreeRTOS-Plus-TCP\protocols\include;.\FreeRTOS-Plus-TCP\portable\BufferManagement;.\DemoTasks\include;.\FreeRTOS-Plus-TCP\portable\Compiler\MSVC;.\WinPCap;.\FreeRTOS\Source\portable\MSVC-MingW;.\TraceMacros\Example1;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0500;WINVER=0x400;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug/WIN32.pch</PrecompiledHeaderOutputFile>
@@ -136,6 +137,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DemoTasks\network_port.c" />
     <ClCompile Include="FreeRTOS\Source\event_groups.c" />
     <ClCompile Include="FreeRTOS\Source\list.c" />
     <ClCompile Include="FreeRTOS\Source\portable\MemMang\heap_4.c" />
@@ -162,6 +164,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="MQTT\mqtt.c" />
+    <ClCompile Include="mqtt_port.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\FreeRTOS\Source\include\event_groups.h" />

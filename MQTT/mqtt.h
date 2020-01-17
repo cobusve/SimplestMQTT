@@ -1,3 +1,7 @@
+/*
+* This file contains the MQTT interface specification
+*
+*/
 #include <stdint.h>
 
 #define MQTT_SUCCESS 1
@@ -20,7 +24,7 @@
 #define MQTT_PACKET_TYPE_UNSUBSCRIBE                           ( ( uint8_t ) 0xa2U ) /**< @brief UNSUBSCRIBE (client-to-server). */
 #define MQTT_PACKET_TYPE_UNSUBACK                              ( ( uint8_t ) 0xb0U ) /**< @brief UNSUBACK (server-to-client). */
 
-
+// Contains MQTT settings, an opague to the network connection instance and some session state
 struct mqtt_context {
 	// Conneciton Configuration (input)
 	void*    network_tag;               // Used by read and write functions to pass network connection reference
@@ -33,7 +37,7 @@ struct mqtt_context {
 
 struct mqtt_header {
 	uint8_t  type;
-	uint32_t remainingLength;
+	int32_t remainingLength;
 };
 
 typedef enum {
@@ -47,21 +51,24 @@ typedef enum {
 }  eMqttConnectResult_t;
 
 
+// These functions must be supplied by the application
 int  mqtt_write( struct mqtt_context* tag, uint8_t* ptr, int32_t len );
 int  mqtt_read( struct mqtt_context* tag, uint8_t* ptr, int32_t len );
 int  mqtt_processPacket( struct mqtt_context* tag, struct mqtt_header* header );
+
+// The application needs to call this to check for incoming packets
 int  mqtt_pollInput( struct mqtt_context* tag );
 
+// General MQTT interface functions
 int mqtt_Connect( struct mqtt_context* tag );
 int mqtt_Disconnect( struct mqtt_context* tag );
 int mqtt_PingReq( struct mqtt_context* tag );
-
+int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter);
 int mqtt_publish(
 	struct mqtt_context* tag,
 	char* topic,
 	uint8_t* pData,
 	int32_t len );
 
-int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter);
 
 

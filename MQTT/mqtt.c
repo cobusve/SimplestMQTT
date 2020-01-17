@@ -1,14 +1,11 @@
-/* FreeRTOS includes. */
-#include "FreeRTOS.h"
-#include "task.h"
-
-/* FreeRTOS+TCP includes. */
-#include "FreeRTOS_IP.h"
-#include "FreeRTOS_Sockets.h"
+/*
+* This file implements the core MQTT protocol
+*
+*/
+#include <string.h>
 #include "mqtt.h"
 
 #define MQTT_VERSION_3_1_1    4U 
-
 
 // Applies to QOS1/2 packets only
 #define MQTT_PACKET_TYPE_PUBACK                                ( ( uint8_t ) 0x40U ) /**< @brief PUBACK (server-to-client). */
@@ -16,42 +13,6 @@
 static uint8_t* encodeRemainingLength( uint8_t* pDestination, int32_t length );
 struct mqtt_header parseHeader( struct mqtt_context* tag );
 
-/*-----------------------------------------------------------*/
-int  mqtt_write( struct mqtt_context* mqtt, uint8_t* ptr, int32_t len )
-{
-	/* Send the string to the socket. */
-	return FreeRTOS_send( *(Socket_t*) mqtt->network_tag,		/* The socket being sent to. */
-		(void*)ptr,												/* The data being sent. */
-		len,													/* The length of the data being sent. */
-		0 );														/* No flags. */
-}
-
-int  mqtt_read( struct mqtt_context* mqtt, uint8_t* ptr, int32_t len )
-{
-	int32_t  xReceivedBytes = 0;
-	int xReturned;
-
-	while ( xReceivedBytes < len )
-	{
-		xReturned = FreeRTOS_recv( *(Socket_t*)mqtt->network_tag,		/* The socket being received from. */
-									ptr + xReceivedBytes,				/* The buffer into which the received data will be written. */
-									len - xReceivedBytes,				/* The size of the buffer provided to receive the data. */
-									0 );									/* No flags. */
-		configASSERT( xReturned >= 0 );
-
-		if ( xReturned == 0 )
-		{
-			/* Timed out. We must now exit*/
-			break;
-		}
-		else
-		{
-			/* Keep a count of the bytes received so far. */
-			xReceivedBytes += xReturned;
-		}
-	}
-	return xReceivedBytes;
-}
 
 int mqtt_Connect( struct mqtt_context* tag )
 {   
