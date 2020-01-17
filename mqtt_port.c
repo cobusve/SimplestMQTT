@@ -47,28 +47,80 @@ int  mqtt_read(struct mqtt_context* mqtt, uint8_t* ptr, int32_t len)
 
 
 /*-----------------------------------------------------------*/
+typedef void (*processPacketFn_t)(uint8_t* data, int32_t len);
+
+void topic1Function(uint8_t* data, int32_t len) 
+{
+	FreeRTOS_debug_printf(("Topic 1 data : %s\r\n", data));
+}
+void topic2Function(uint8_t* data, int32_t len) 
+{
+	FreeRTOS_debug_printf(("Topic 2 data : %s\r\n", data));
+}
+
+// Create a routing table for topic data
+struct processingTable {
+	char   topicName[32];  // Topic name to route
+	processPacketFn_t fn;  // Function for processing this topic
+} processingTable[2] = {
+	{"MyTopic", topic1Function},
+	{"OtherTopic", topic2Function}
+};
+
 
 int  mqtt_processPacket(struct mqtt_context* tag, struct mqtt_header* header)
 {
-	int status = MQTT_SUCCESS;
+	int status = MQTT_ERROR;
+	;
 	uint8_t buffer[128] = { 0 };
-	if (mqtt_read(tag, buffer, header->remainingLength) != header->remainingLength)
+
+	if (header->remainingLength > 128)
 	{
-		status = MQTT_ERROR;
+		return MQTT_ERROR;
 	}
-	else
+
+	// Process our pubish packet. We could use a lookup table here to route by topic.
+	if (header->type == MQTT_PACKET_TYPE_PUBLISH)
 	{
-		// Process our pubish packet. We could use a lookup table here to route by topic.
-		if (header->type == MQTT_PACKET_TYPE_PUBLISH)
+		uint16_t topicLength;
+
+		// Read the entire packet into the processing buffer
+		if (mqtt_read(tag, buffer, header->remainingLength) == header->remainingLength)
 		{
-			uint8_t topic;
-			uint16_t topicLength;
-
 			topicLength = (buffer[0] << 8) + buffer[1];
+			
+			// If we get a valid topic length which does not excceed the packet length
+			if (topicLength < header->remainingLength - 2)
+			{
+				// In case we do not find it
+				// Route the packet to the right function
+				for (int i = 0; i < sizeof(processingTable) / sizeof(processingTable[0]); i++)
+				{
+					if (strncmp(&buffer[2], processingTable[i].topicName, topicLength) == 0)
+					{
+						// We found a match, process it!
+						status = MQTT_SUCCESS;
+						processingTable[i].fn(&buffer[topicLength + 2], header->remainingLength - topicLength - 2);
+					}
+				}
 
-			FreeRTOS_debug_printf(("Incoming Publish : %s\r\n", &buffer[topicLength + 2]));
-		}
+				if (status == MQTT_ERROR)
+				{
+					// No match, just print it out
+					FreeRTOS_debug_printf(("Unprocessed Publish : %s\r\n", &buffer[topicLength + 2]));
+				}
+			}
+		}	
 	}
-
+	else if (header->type == MQTT_PACKET_TYPE_SUBACK)
+	{
+		// Just read the data and ignore
+		mqtt_read(tag, buffer, header->remainingLength);
+	}
+	else // Just dump all other packets for now
+	{
+		mqtt_read(tag, buffer, header->remainingLength);
+	}
+	
 	return status;
 }

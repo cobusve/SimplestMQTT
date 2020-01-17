@@ -104,7 +104,15 @@ static void prvEchoClientTask(void* pvParameters)
 			mqtt_subscribe(&mqtt1, "MyTopic");
 			mqtt_pollInput(&mqtt1);                   /* Receive incoming MQTT SUBACK packet */
 
+			mqtt_subscribe(&mqtt1, "OtherTopic");
+			mqtt_pollInput(&mqtt1);                   /* Receive incoming MQTT SUBACK packet */
+
 			result = mqtt_publish(&mqtt1, "MyTopic", testdata, 9);
+			result = mqtt_publish(&mqtt1, "OtherTopic", testdata, 9);
+
+			vTaskDelay(500);
+
+			mqtt_pollInput(&mqtt1);                  /* Receive incoming MQTT Publish packet */
 			mqtt_pollInput(&mqtt1);                  /* Receive incoming MQTT Publish packet */
 
 			mqtt_Disconnect(&mqtt1);

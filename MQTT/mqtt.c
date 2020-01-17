@@ -184,10 +184,8 @@ int mqtt_pollInput( struct mqtt_context* tag )
 	uint8_t buffer[32];
 	struct mqtt_header header = parseHeader(tag);
 
-	// Valid CONNACK is the only packet we may accept at this point
-	if ( ( header.type == MQTT_PACKET_TYPE_SUBACK ) ||
-		 ( header.type == MQTT_PACKET_TYPE_PINGRESP ) ||
-		 ( header.type == MQTT_PACKET_TYPE_UNSUBACK ) )
+	// Here we decide which packets to pass up for processing and which to just swallow 
+	if ( ( header.type == MQTT_PACKET_TYPE_UNSUBACK ) )
 	{
 		// Just swallow the packet
 		if ( mqtt_read( tag, buffer, header.remainingLength ) != header.remainingLength )
@@ -195,9 +193,10 @@ int mqtt_pollInput( struct mqtt_context* tag )
 			status = MQTT_ERROR;
 		}
 	}
-	else if (header.type == MQTT_PACKET_TYPE_PUBLISH)
+	else if ( (header.type == MQTT_PACKET_TYPE_PINGRESP) ||
+		      (header.type == MQTT_PACKET_TYPE_SUBACK) ||
+		      (header.type == MQTT_PACKET_TYPE_PUBLISH) )
 	{
-		// Publish packets have a payload that needs to be processed
 		status = mqtt_processPacket( tag, &header );
 	}
 	else 
