@@ -96,7 +96,6 @@ static void prvEchoClientTask(void* pvParameters)
 			eMqttConnectResult_t result = mqtt_Connect( &mqtt1 );
 
 			configASSERT(result == MQTT_CONNECT_ACCEPTED);
-			FreeRTOS_debug_printf( ( "Connected\r\n") );
 
 			mqtt_PingReq(&mqtt1);
 			mqtt_pollInput(&mqtt1);                   /* Receive incoming MQTT PINGRES packet */

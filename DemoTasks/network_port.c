@@ -23,6 +23,7 @@ static const TickType_t xSendTimeOut = pdMS_TO_TICKS(300);
 
 int prvTcpConnect(Socket_t* pxSocket)
 {
+	BaseType_t result;
 	WinProperties_t xWinProps;
 	struct freertos_sockaddr xEchoServerAddress;
 
@@ -52,12 +53,15 @@ int prvTcpConnect(Socket_t* pxSocket)
 	FreeRTOS_setsockopt(*pxSocket, 0, FREERTOS_SO_WIN_PROPERTIES, (void*)& xWinProps, sizeof(xWinProps));
 
 	/* Connect to the echo server. */
-	if (FreeRTOS_connect(*pxSocket, &xEchoServerAddress, sizeof(xEchoServerAddress)) == 0)
+	result = FreeRTOS_connect(*pxSocket, &xEchoServerAddress, sizeof(xEchoServerAddress));
+	if (result == 0)
 	{
+		FreeRTOS_debug_printf(("Connected\r\n"));
 		return 1;
 	}
 	else
 	{
+		FreeRTOS_debug_printf(("Connection error %d\r\n", result));
 		return 0;
 	}
 }
