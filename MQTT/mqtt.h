@@ -20,7 +20,6 @@
 #define MQTT_PACKET_TYPE_PINGRESP                              ( ( uint8_t ) 0xd0U ) /**< @brief PINGRESP (server-to-client). */
 #define MQTT_PACKET_TYPE_SUBSCRIBE                             ( ( uint8_t ) 0x82U ) /**< @brief SUBSCRIBE (client-to-server). */
 #define MQTT_PACKET_TYPE_SUBACK                                ( ( uint8_t ) 0x90U ) /**< @brief SUBACK (server-to-client). */
-
 #define MQTT_PACKET_TYPE_UNSUBSCRIBE                           ( ( uint8_t ) 0xa2U ) /**< @brief UNSUBSCRIBE (client-to-server). */
 #define MQTT_PACKET_TYPE_UNSUBACK                              ( ( uint8_t ) 0xb0U ) /**< @brief UNSUBACK (server-to-client). */
 
@@ -64,6 +63,8 @@ int mqtt_Connect( struct mqtt_context* tag );
 int mqtt_Disconnect( struct mqtt_context* tag );
 int mqtt_PingReq( struct mqtt_context* tag );
 int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter);
+int mqtt_unSubscribe(struct mqtt_context* tag, char* topicFilter);
+
 int mqtt_publish(
 	struct mqtt_context* tag,
 	char* topic,

@@ -92,7 +92,7 @@ void  prvTcpDisconnect(Socket_t* pxSocket)
 
 	/* Close this socket before looping back to create another. */
 	FreeRTOS_closesocket(*pxSocket);
-	FreeRTOS_debug_printf(("Disconnected ... \r\n"));
+	FreeRTOS_debug_printf(("Disconnected.\r\n"));
 }
 
 

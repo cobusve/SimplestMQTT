@@ -96,7 +96,7 @@ static void prvEchoClientTask(void* pvParameters)
 			eMqttConnectResult_t result = mqtt_Connect( &mqtt1 );
 
 			configASSERT(result == MQTT_CONNECT_ACCEPTED);
-			FreeRTOS_debug_printf( ( "Connected\r\n", result ) );
+			FreeRTOS_debug_printf( ( "Connected\r\n") );
 
 			mqtt_PingReq(&mqtt1);
 			mqtt_pollInput(&mqtt1);                   /* Receive incoming MQTT PINGRES packet */
@@ -115,6 +115,7 @@ static void prvEchoClientTask(void* pvParameters)
 			mqtt_pollInput(&mqtt1);                  /* Receive incoming MQTT Publish packet */
 			mqtt_pollInput(&mqtt1);                  /* Receive incoming MQTT Publish packet */
 
+			FreeRTOS_debug_printf(("Request Disconnect\r\n"));
 			mqtt_Disconnect(&mqtt1);
 			vTaskDelay(100);
 		}

@@ -46,9 +46,22 @@ int  mqtt_read(struct mqtt_context* mqtt, uint8_t* ptr, int32_t len)
 }
 
 
-/*-----------------------------------------------------------*/
+/*
+ * What follows is an example of how a MQTT packet processor could be built as a middle layer.
+ * This layer will receive MQTT messages (PUBLISH and others) from the network stream using 
+ *   the read function and route the received messages to the appropriate processor.
+ * While PUBLISH messages are routed based on their Topic according to a lookup table, other
+ *   messages are routed by message type as contained in the header.
+ *
+*/
+
+/* Prototype function pointer for callbacks */
 typedef void (*processPacketFn_t)(uint8_t* data, int32_t len);
 
+/* Two example functions to show how processing could happen in upstream modules. 
+ * The function pointers could be stored statically as application level configuration or 
+ *    be injected by the upstream modules at runtime by choice of the application.
+ */
 void topic1Function(uint8_t* data, int32_t len) 
 {
 	FreeRTOS_debug_printf(("Topic 1 data : %s\r\n", data));
@@ -58,26 +71,30 @@ void topic2Function(uint8_t* data, int32_t len)
 	FreeRTOS_debug_printf(("Topic 2 data : %s\r\n", data));
 }
 
-// Create a routing table for topic data
+/* Create a routing table for topic data (Topics here are NOT Topic filters with wildcards! */
 struct processingTable {
-	char   topicName[32];  // Topic name to route
-	processPacketFn_t fn;  // Function for processing this topic
+	char   topicName[32];  /* Topic name to route */
+	processPacketFn_t fn;  /* Function for processing this topic */
 } processingTable[2] = {
 	{"MyTopic", topic1Function},
 	{"OtherTopic", topic2Function}
 };
 
-
+/* Function to process and route packets. This function transforms the stream from TCP into
+ *    a packet that lives in a statically allocated buffer
+ */
 int  mqtt_processPacket(struct mqtt_context* tag, struct mqtt_header* header)
 {
 	int status = MQTT_ERROR;
-	;
-	uint8_t buffer[128] = { 0 };
+	static uint8_t buffer[128];
 
 	if (header->remainingLength > 128)
 	{
 		return MQTT_ERROR;
 	}
+
+	// First always clear the buffer out
+	memset(buffer, 0, sizeof(buffer));
 
 	// Process our pubish packet. We could use a lookup table here to route by topic.
 	if (header->type == MQTT_PACKET_TYPE_PUBLISH)
@@ -112,14 +129,17 @@ int  mqtt_processPacket(struct mqtt_context* tag, struct mqtt_header* header)
 			}
 		}	
 	}
-	else if (header->type == MQTT_PACKET_TYPE_SUBACK)
+	else if ((header->type == MQTT_PACKET_TYPE_SUBACK) ||
+			 (header->type == MQTT_PACKET_TYPE_UNSUBACK))
 	{
-		// Just read the data and ignore
+		// Just read the data and ignore. For SUBACK it has packet ID and QOS values, for UNSUBACK just ID 
 		mqtt_read(tag, buffer, header->remainingLength);
+		status = MQTT_SUCCESS;
 	}
 	else // Just dump all other packets for now
 	{
 		mqtt_read(tag, buffer, header->remainingLength);
+		status = MQTT_SUCCESS;
 	}
 	
 	return status;

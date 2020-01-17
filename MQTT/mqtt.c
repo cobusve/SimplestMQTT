@@ -141,14 +141,15 @@ int mqtt_publish( struct mqtt_context* tag, char* topic, uint8_t* pData, int32_t
 	}
 }
 
-
-int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter)
+int subUnsub(struct mqtt_context* tag, char* topicFilter, uint8_t packetType)
 {
 	int32_t status = 0;
 	uint8_t* pCursor;
 	uint16_t topicFilterlen = (uint16_t)strlen( topicFilter );
 	int32_t remainingLength =  topicFilterlen + 5;
-	uint8_t buffer[9] = { MQTT_PACKET_TYPE_SUBSCRIBE };
+	uint8_t buffer[9] = { 0 };
+
+	buffer[0] = packetType;
 
 	pCursor = encodeRemainingLength( &buffer[ 1 ], remainingLength );
 
@@ -178,6 +179,18 @@ int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter)
 	}
 }
 
+
+int mqtt_subscribe(struct mqtt_context* tag, char* topicFilter)
+{
+	return subUnsub(tag, topicFilter, MQTT_PACKET_TYPE_SUBSCRIBE);
+}
+
+int mqtt_unSubscribe(struct mqtt_context* tag, char* topicFilter)
+{
+	return subUnsub(tag, topicFilter, MQTT_PACKET_TYPE_UNSUBSCRIBE);
+}
+
+// Check the input buffer for the next MQTT packet and process it
 int mqtt_pollInput( struct mqtt_context* tag )
 {
 	int status = MQTT_SUCCESS;
